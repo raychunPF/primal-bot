@@ -1,4 +1,17 @@
 {
     "MICROSOFT_APP_ID": "",
-    "MICROSOFT_APP_PASSWORD": ""
+    "MICROSOFT_APP_PASSWORD": "",
+    
+    "primalAPI": {
+        "PRIMAL_APP_KEY": "7937a89b05c597d2eb3ff9ac26a3f0a4",
+        "PRIMAL_APP_ID": "32123c3d",
+        "AUTHORIZATION": "Basic cmF5LmNodW46MTIzNDU2"
+    },
+    
+    "RECOMMENDATIONS": {
+        "URL": "https://api.primal.com/v2/recommendations",
+        "PARAMS": {
+            "maxContentItems": 5
+        }
+    }
 }

@@ -1,7 +1,10 @@
+// =========================================================
+// Imports
+// =========================================================
 var konphyg = require('konphyg')(__dirname + '/config');
 global.config = konphyg('app');
 var restify = require('restify');
-var rest = require('restler');
+var primalAPI = require('./primalAPI.js').primalAPI;
 var builder = require('botbuilder');
 
 // **** Static Variables
@@ -33,7 +36,6 @@ server.post('/api/messages', connector.listen());
 //=========================================================
 bot.dialog('/', [
     function (session) {
-        // Root route
         session.beginDialog('/recommendation');
     }
 ]);
@@ -43,25 +45,9 @@ bot.dialog('/recommendation', [
         builder.Prompts.text(session, "Hello, enter a keyword you want to search for");
     },
     function(session, results) {
-        var options = {
-            headers: {
-                'Accept': 'application/json',
-                "Primal-App-Key": '7937a89b05c597d2eb3ff9ac26a3f0a4',
-                "Primal-App-ID": '32123c3d',
-                "Authorization": 'Basic cmF5LmNodW46MTIzNDU2'
-            }
-        }
-        
-        rest.get("https://api.primal.com/v2/recommendations?q=" + results.response, options).on('complete', function(data, response) {
-            var cards = [];
-            for (var i = 0; i < data["@graph"].length; i++) {
-                var item = data["@graph"][i];
-                if (item["@type"] === "content") {
-                    cards.push(item);
-                }
-            }
-            session.beginDialog('/carousel', cards);
-        });
+        primalAPI.recommendations(results.response, function(content) {
+            session.beginDialog('/carousel', content);
+        }, function(){});
     }
 ]);
 
