@@ -14,13 +14,13 @@ var CONFIG = global.config;
 // Setup Restify Server
 var server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, function () {
-   console.log('%s listening to %s', server.name, server.url); 
+   console.log('%s listening to %s', server.name, server.url);
 });
   
 // For Bot Framework Service
 var connector = new builder.ChatConnector({
-    appId: process.env.MICROSOFT_APP_ID,
-    appPassword: process.env.MICROSOFT_APP_PASSWORD
+    appId: config.MICROSOFT_APP_ID,
+    appPassword: config.MICROSOFT_APP_PASSWORD
 });
 
 
