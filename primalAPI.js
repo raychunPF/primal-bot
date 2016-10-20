@@ -26,12 +26,14 @@ primalAPI = rest.service(
          * @param {string} onSuccess The function to call on success
          * @param {string} onFail The function to call on fail
          */
-        recommendations: function(message, onSuccess, onFail) {
+        recommendations: function(message, site, onSuccess, onFail) {
             var formattedMessage = _formatMessage(message);
             // As hacky as this code looks, according to http://stackoverflow.com/questions/122102/what-is-the-most-efficient-way-to-deep-clone-an-object-in-javascript
             // it is the most efficient method somehow
             var queryStrings = JSON.parse(JSON.stringify(CONFIG.RECOMMENDATIONS.PARAMS));
             queryStrings[formattedMessage.type] = formattedMessage.message;
+            if(site)
+              queryStrings['site'] = site;
             
             this.get(CONFIG.RECOMMENDATIONS.URL, {"query": queryStrings}).on("success", function(data, response) {
                 var cards = [];

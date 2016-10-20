@@ -6,6 +6,7 @@ global.config = konphyg('app');
 var restify = require('restify');
 var primalAPI = require('./primalAPI.js').primalAPI;
 var builder = require('botbuilder');
+var search = require('./search.js');
 
 // **** Static Variables
 var CONFIG = global.config;
@@ -45,9 +46,9 @@ bot.dialog('/recommendation', [
         builder.Prompts.text(session, "Hello, enter a keyword you want to search for");
     },
     function(session, results) {
-        primalAPI.recommendations(results.response, function(content) {
+        search.querySitesForRecipes(results.response, function(content){
             session.beginDialog('/carousel', content);
-        }, function(error){ console.log(error); });
+        }, function(){});
     }
 ]);
 
