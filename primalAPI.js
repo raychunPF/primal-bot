@@ -1,4 +1,8 @@
-var rest = require('restler');
+// Imports
+var utils = require("./utils/general.js");
+var rest = require("restler");
+
+// Static Variables
 var CONFIG = global.config;
 
 primalAPI = rest.service(
@@ -57,17 +61,11 @@ primalAPI = rest.service(
  */
 function _formatMessage(message) {
     // Check if url, else the message is a query
-    if (_isURL(message)) {
+    if (utils.isUrl(message)) {
         return { "message": encodeURI(message), "type": "u" };
     } else {
         return { "message": message.split(' ').join('+'), "type": "q" };
     }
-}
-
-function _isURL(url) {
-    // TODO Can go in a utilities file
-    var urlPattern = /^((http|https|ftp):\/\/)/;
-    return urlPattern.test(url);
 }
 
 exports.primalAPI = new primalAPI();
