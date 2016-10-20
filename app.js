@@ -33,22 +33,87 @@ var bot = new builder.UniversalBot(connector);
 server.post('/api/messages', connector.listen());
 
 //=========================================================
+// Bots Global Actions
+//=========================================================
+
+bot.beginDialogAction('changeName', '/changeName', { matches: /^name|change name/i });
+
+//=========================================================
 // Bots Dialogs
 //=========================================================
 bot.dialog('/', [
-    function (session) {
-        session.beginDialog('/recommendation');
+    function(session, results, next) {
+        if (!session.userData.name) {
+            session.beginDialog("/firstRun");
+        } else {
+            next();
+        } 
+    },
+    function(session, results, next) {
+        if (session.userData.name && !session.privateConversationData.running) {
+            session.privateConversationData.running = true;
+            session.send("Welcome back %s, give me the name of a dish and I'll find some recipes.", session.userData.name);
+        } else {
+            next();
+        } 
+    },
+    function(session) {
+        session.dialogData.text = session.message.text || "";
+        session.beginDialog('/recommendation', session.dialogData.text);
+    },
+    function(session) {
+        // TODO: May be impossible to reach this point, investigate and delete if needed
+        session.beginDialog("/goodbye");
+    }
+]);
+
+bot.dialog("/goodbye", [
+    function(session) {
+        // Always say goodbye
+        session.send("Ok %s, see you later!", session.userData.name);
+        session.endConversation();
+    }
+]);
+
+bot.dialog("/firstRun", [
+    function(session) {
+        builder.Prompts.text(session, "Hi! I'm the Recipe Bot. I'll help you find recipes across the web. But first, what's your name?");
+    },
+    function(session, results) {
+        // We'll save the users name and send them an initial greeting. All 
+        // future messages from the user will be routed to the root dialog.
+        session.userData.name = results.response;
+        session.endDialog("Hi %s, give me the name of a dish and I'll find some recipes.", session.userData.name); 
     }
 ]);
 
 bot.dialog('/recommendation', [
+    // Check if dish name was passed in
+    function(session, args, next) {
+        session.dialogData.dish = args;
+        if (!session.dialogData.dish || session.dialogData.dish === "") {
+            builder.Prompts.text(session, "Hey " + session.userData.name + ", give me the name of a dish and I'll find some recipes.");
+        } else {
+            next({response: session.dialogData.dish});
+        }
+    },
+    // Query for sites with recipes on dish
+    function(session, results) {
+        session.dialogData.dish = results.response;
+        search.querySitesForRecipes(results.response, function(content){
+            session.beginDialog("/carousel", content);
+        }, function(){});
+    },
     function(session) {
-        builder.Prompts.text(session, "Hello, enter a keyword you want to search for");
+        builder.Prompts.text(session, "Alright " + session.userData.name + ", here are a couple " + session.dialogData.dish + " recipes. Give me another dish or say quit if you want to stop.");
     },
     function(session, results) {
-        search.querySitesForRecipes(results.response, function(content){
-            session.beginDialog('/carousel', content);
-        }, function(){});
+        // Loop recommendations
+        if (/^quit/i.test(results.response)) {
+            session.beginDialog("/goodbye");
+        } else {
+            session.replaceDialog("/recommendation", results.response);
+        }
     }
 ]);
 
@@ -73,5 +138,19 @@ bot.dialog('/carousel', [
             
             session.endDialog(msg);
         }, function() {console.log("err"); });
+    }
+]);
+
+bot.dialog("/changeName", [
+    function(session) {
+        if (!session.userData.name) {
+            session.beginDialog("/firstRun");
+        } else {
+            builder.Prompts.text(session, "What do you want me to call you?");
+        }
+    },
+    function(session, results) {
+        session.userData.name = results.response;
+        session.cancelDialog(0, '/recommendation');
     }
 ]);

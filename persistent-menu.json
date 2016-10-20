@@ -4,13 +4,8 @@
   "call_to_actions":[
     {
       "type":"postback",
-      "title":"Help",
-      "payload":"action?help"
-    },
-    {
-      "type":"postback",
-      "title":"Goodbye",
-      "payload":"action?goodbye"
+      "title":"Change Name",
+      "payload":"action?changeName"
     }
   ]
 }
