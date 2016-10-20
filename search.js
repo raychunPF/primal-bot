@@ -8,21 +8,22 @@ exports.querySitesForRecipes = function(message, onSuccess, onFail) {
     var siteList = resources['full-site-list'];
     
     function searchRecipeSite() {
-        if( count < siteList.length){
-            PrimalAPI.recommendations(message, siteList[count], function(content) {
+        for(var i=0; i<resources['full-site-list'].length; i++){
+            count++;
+            PrimalAPI.recommendations(message, siteList[i], function(content) {
                 for(var j=0; j<content.length; j++){
                     contentList.push(content[j]);
                 }
-                count += 1;
-                searchRecipeSite();
+                count --;
+                
+                if(count == 0){
+                    contentList.sort(function(a, b) { 
+                        return b.contentScore - a.contentScore;
+                    });
+                    contentList = contentList.slice(0,4);
+                    onSuccess(contentList);
+                }
             },  function(error){ console.log(error); });
-        }
-        else {
-            contentList.sort(function(a, b) { 
-                return b.contentScore - a.contentScore;
-            });
-            contentList = contentList.slice(0,4);
-            onSuccess(contentList);
         }
     }
     
