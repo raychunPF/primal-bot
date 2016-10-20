@@ -6,6 +6,7 @@ global.config = konphyg('app');
 var restify = require('restify');
 var builder = require('botbuilder');
 var search = require('./search.js');
+var scraper = require('./utils/imageScraper.js');
 
 // **** Static Variables
 var CONFIG = global.config;
@@ -53,22 +54,24 @@ bot.dialog('/recommendation', [
 
 bot.dialog('/carousel', [
     function(session, results) {
-        var prettyCards = [];
-        for (var i = 0; i < results.length; i++) {
-            var item = results[i];
-            prettyCards.push(
-                new builder.HeroCard(session)
-                    .title(item["title"])
-                    .subtitle(item["publisher"])
-                    .text(item["description"])
-                    .images([ builder.CardImage.create(session, item["image"]) ])
-                    .tap(builder.CardAction.openUrl(session, decodeURI(item["url"]), item["publisher"]))
-            );
-        }
-        var msg = new builder.Message(session)
-            .attachmentLayout(builder.AttachmentLayout.carousel)
-            .attachments(prettyCards);
-        
-        session.endDialog(msg);
+        scraper.addPreviewImages(results, function(content) {
+            var prettyCards = [];
+            for (var i = 0; i < content.length; i++) {
+                var item = content[i];
+                prettyCards.push(
+                    new builder.HeroCard(session)
+                        .title(item["title"])
+                        .subtitle(item["publisher"])
+                        .text(item["description"])
+                        .images([ builder.CardImage.create(session, item["image"]) ])
+                        .tap(builder.CardAction.openUrl(session, decodeURI(item["url"]), item["publisher"]))
+                );
+            }
+            var msg = new builder.Message(session)
+                .attachmentLayout(builder.AttachmentLayout.carousel)
+                .attachments(prettyCards);
+            
+            session.endDialog(msg);
+        }, function() {console.log("err"); });
     }
 ]);
