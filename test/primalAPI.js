@@ -3,10 +3,6 @@ var testHome = "../test";
 require(testHome + "/test-setup");
 var primalAPI = require("../primalAPI.js").primalAPI;
 
-// Test packages
-var restler = require("restler");
-var should = require("chai").should();
-
 describe("Primal Service API", function() {
     describe("Recommendation using a url", function() {
         this.slow(1000);
