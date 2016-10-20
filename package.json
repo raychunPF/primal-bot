@@ -2,9 +2,9 @@
   "name": "primalbot",
   "version": "1.0.0",
   "description": "Primal Bot using Primal's API and Microsoft Bot Framework",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
-    "test": "make test"
+    "test": "./node_modules/.bin/mocha --reporter spec"
   },
   "author": "",
   "license": "ISC",

@@ -40,9 +40,9 @@ primalAPI = rest.service(
                 onSuccess(cards);
             }).on("fail", function(data, response) {
                 // TODO more efficient way of handling success, fail, error, and maybe timeout
-                console.log("recommendations - fail");
+                onFail(response.rawEncoded);
             }).on("error", function(data, response) {
-                console.log("recommendations - error");
+                onFail(response.rawEncoded);
             });
         }
     }

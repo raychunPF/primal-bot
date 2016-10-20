@@ -45,10 +45,9 @@ bot.dialog('/recommendation', [
         builder.Prompts.text(session, "Hello, enter a keyword you want to search for");
     },
     function(session, results) {
-        console.log(results.response);
         primalAPI.recommendations(results.response, function(content) {
             session.beginDialog('/carousel', content);
-        }, function(){});
+        }, function(error){ console.log(error); });
     }
 ]);
 
