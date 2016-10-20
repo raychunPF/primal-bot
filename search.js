@@ -1,5 +1,4 @@
 var konphyg = require('konphyg')(__dirname + '/config');
-global.config = konphyg('app');
 var PrimalAPI = require('./primalAPI.js').primalAPI;
 var resources = konphyg('resource-list');
 

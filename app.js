@@ -4,7 +4,6 @@
 var konphyg = require('konphyg')(__dirname + '/config');
 global.config = konphyg('app');
 var restify = require('restify');
-var primalAPI = require('./primalAPI.js').primalAPI;
 var builder = require('botbuilder');
 var search = require('./search.js');
 
@@ -60,14 +59,10 @@ bot.dialog('/carousel', [
             prettyCards.push(
                 new builder.HeroCard(session)
                     .title(item["title"])
-                    .subtitle(item["description"])
-                    .images([
-                        builder.CardImage.create(session, item["image"])
-                            .tap(builder.CardAction.showImage(session, item["image"])),
-                    ])
-                    .buttons([
-                        builder.CardAction.openUrl(session, decodeURI(item["url"]), "select")
-                    ]).tap(builder.CardAction.openUrl(session, decodeURI(item["url"]), "Select"))
+                    .subtitle(item["publisher"])
+                    .text(item["description"])
+                    .images([ builder.CardImage.create(session, item["image"]) ])
+                    .tap(builder.CardAction.openUrl(session, decodeURI(item["url"]), item["publisher"]))
             );
         }
         var msg = new builder.Message(session)
