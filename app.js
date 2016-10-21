@@ -37,41 +37,38 @@ server.post('/api/messages', connector.listen());
 //=========================================================
 
 bot.beginDialogAction('changeName', '/changeName', { matches: /^name|change name/i });
+bot.beginDialogAction('reset', '/reset');
 
 //=========================================================
 // Bots Dialogs
 //=========================================================
 bot.dialog('/', [
-    function(session, results, next) {
+    function(session, args, next) {
         if (!session.userData.name) {
+            session.privateConversationData["running"] = true;
             session.beginDialog("/firstRun");
         } else {
             next();
         } 
     },
-    function(session, results, next) {
+    function(session, args, next) {
         if (session.userData.name && !session.privateConversationData.running) {
-            session.privateConversationData.running = true;
-            session.send("Welcome back %s, give me the name of a dish and I'll find some recipes.", session.userData.name);
+            session.privateConversationData["running"] = true;
+            builder.Prompts.text(session, "Welcome back " + session.userData.name + ", give me the name of a dish and I'll find some recipes.");
         } else {
-            next();
+            next({response: ""});
         } 
     },
-    function(session) {
-        session.dialogData.text = session.message.text || "";
-        session.beginDialog('/recommendation', session.dialogData.text);
-    },
-    function(session) {
-        // TODO: May be impossible to reach this point, investigate and delete if needed
-        session.beginDialog("/goodbye");
+    function(session, results) {
+        session.beginDialog('/recommendation', { response: results.response });
     }
 ]);
 
 bot.dialog("/goodbye", [
     function(session) {
         // Always say goodbye
-        session.send("Ok %s, see you later!", session.userData.name);
-        session.endConversation();
+        // Clears everything in session.privateConversationData
+        session.endConversation("Ok %s, see you later!", session.userData.name);
     }
 ]);
 
@@ -83,25 +80,24 @@ bot.dialog("/firstRun", [
         // We'll save the users name and send them an initial greeting. All 
         // future messages from the user will be routed to the root dialog.
         session.userData.name = results.response;
-        session.endDialog("Hi %s, give me the name of a dish and I'll find some recipes.", session.userData.name); 
+        session.endDialog(); 
     }
 ]);
 
 bot.dialog('/recommendation', [
     // Check if dish name was passed in
     function(session, args, next) {
-        session.dialogData.dish = args;
-        if (!session.dialogData.dish || session.dialogData.dish === "") {
+        if (!args.response || args.response === "") {
             builder.Prompts.text(session, "Hey " + session.userData.name + ", give me the name of a dish and I'll find some recipes.");
         } else {
-            next({response: session.dialogData.dish});
+            next({response: args.response});
         }
     },
     // Query for sites with recipes on dish
     function(session, results) {
         session.dialogData.dish = results.response;
-        search.querySitesForRecipes(results.response, function(content){
-            session.beginDialog("/carousel", content);
+        search.querySitesForRecipes(session.dialogData.dish, function(content){
+            session.beginDialog("/carousel", { cards: content });
         }, function(){});
     },
     function(session) {
@@ -112,14 +108,14 @@ bot.dialog('/recommendation', [
         if (/^quit/i.test(results.response)) {
             session.beginDialog("/goodbye");
         } else {
-            session.replaceDialog("/recommendation", results.response);
+            session.replaceDialog("/recommendation", { response: results.response });
         }
     }
 ]);
 
 bot.dialog('/carousel', [
-    function(session, results) {
-        scraper.addPreviewImages(results, function(content) {
+    function(session, args) {
+        scraper.addPreviewImages(args.cards, function(content) {
             var prettyCards = [];
             for (var i = 0; i < content.length; i++) {
                 var item = content[i];
@@ -151,6 +147,15 @@ bot.dialog("/changeName", [
     },
     function(session, results) {
         session.userData.name = results.response;
+        // Clear the dialog stack, and start at recommendation
         session.cancelDialog(0, '/recommendation');
+    }
+]);
+
+bot.dialog("/reset", [
+    function(session) {
+        session.send("reseting...")
+        delete session.userData;
+        session.endConversation("reset");
     }
 ]);

@@ -6,6 +6,11 @@
       "type":"postback",
       "title":"Change Name",
       "payload":"action?changeName"
+    },
+    {
+        "type":"postback",
+        "title":"Reset",
+        "payload":"action?reset"
     }
   ]
 }
