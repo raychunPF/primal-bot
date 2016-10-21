@@ -8,7 +8,9 @@ var builder = require('botbuilder');
 var search = require('./search.js');
 var scraper = require('./utils/imageScraper.js');
 
-// **** Static Variables
+// =========================================================
+// Static Variables
+// =========================================================
 var CONFIG = global.config;
 
 // =========================================================
@@ -87,6 +89,19 @@ bot.dialog("/firstRun", [
 bot.dialog('/recommendation', [
     // Check if dish name was passed in
     function(session, args, next) {
+        // This block is used to catch any queries from the user that is sent
+        // when the bot is busy (preventing any errors)
+        if (typeof args === "undefined") {
+            if (typeof session.message.text === "undefined") {
+                console.log("Error: Ending recommendation because we can't find a query to search for");
+                session.endDialog();
+            } else {
+                var args = {
+                    response: session.message.text
+                };
+            }
+        }
+        
         if (!args.response || args.response === "") {
             builder.Prompts.text(session, "Hey " + session.userData.name + ", give me the name of a dish and I'll find some recipes.");
         } else {
@@ -96,6 +111,8 @@ bot.dialog('/recommendation', [
     // Query for sites with recipes on dish
     function(session, results) {
         session.dialogData.dish = results.response;
+        // Indicate to user that bot is typing
+        session.sendTyping();
         search.querySitesForRecipes(session.dialogData.dish, function(content){
             session.beginDialog("/carousel", { cards: content });
         }, function(){});
@@ -115,25 +132,30 @@ bot.dialog('/recommendation', [
 
 bot.dialog('/carousel', [
     function(session, args) {
-        scraper.addPreviewImages(args.cards, function(content) {
-            var prettyCards = [];
-            for (var i = 0; i < content.length; i++) {
-                var item = content[i];
-                prettyCards.push(
-                    new builder.HeroCard(session)
-                        .title(item["title"])
-                        .subtitle(item["publisher"])
-                        .text(item["description"])
-                        .images([ builder.CardImage.create(session, item["image"]) ])
-                        .tap(builder.CardAction.openUrl(session, decodeURI(item["url"]), item["publisher"]))
-                );
-            }
-            var msg = new builder.Message(session)
-                .attachmentLayout(builder.AttachmentLayout.carousel)
-                .attachments(prettyCards);
-            
-            session.endDialog(msg);
-        }, function() {console.log("err"); });
+        // The user might message something when in the carousel dialog, if so ignore.
+        if ((!args || !args.cards) && session.sessionState.callstack[2]) {
+            session.cancelDialog(session.sessionState.callstack[2]);
+        } else {
+            scraper.addPreviewImages(args.cards, function(content) {
+                var prettyCards = [];
+                for (var i = 0; i < content.length; i++) {
+                    var item = content[i];
+                    prettyCards.push(
+                        new builder.HeroCard(session)
+                            .title(item["title"])
+                            .subtitle(item["publisher"])
+                            .text(item["description"])
+                            .images([ builder.CardImage.create(session, item["image"]) ])
+                            .tap(builder.CardAction.openUrl(session, decodeURI(item["url"]), item["publisher"]))
+                    );
+                }
+                var msg = new builder.Message(session)
+                    .attachmentLayout(builder.AttachmentLayout.carousel)
+                    .attachments(prettyCards);
+                
+                session.endDialog(msg);
+            }, function() {console.log("err"); });
+        }
     }
 ]);
 
@@ -148,7 +170,7 @@ bot.dialog("/changeName", [
     function(session, results) {
         session.userData.name = results.response;
         // Clear the dialog stack, and start at recommendation
-        session.cancelDialog(0, '/recommendation');
+        session.cancelDialog(0, '/recommendation', "");
     }
 ]);
 

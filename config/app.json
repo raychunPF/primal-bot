@@ -13,5 +13,15 @@
         "PARAMS": {
             "maxContentItems": 5
         }
-    }
+    },
+    
+    "TEST_SITE_LIST": [
+        "allrecipes.com"
+    ],
+    
+    "FULL_SITE_LIST": [
+        "allrecipes.com/", 
+        "foodnetwork.com/recipes/", 
+        "thekitchn.com/recipes/"
+    ]
 }
