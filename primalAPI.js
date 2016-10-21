@@ -1,8 +1,12 @@
+// =========================================================
 // Imports
+// =========================================================
 var utils = require("./utils/general.js");
 var rest = require("restler");
 
+// =========================================================
 // Static Variables
+// =========================================================
 var CONFIG = global.config;
 
 primalAPI = rest.service(
@@ -23,8 +27,9 @@ primalAPI = rest.service(
          * Api call to primal recommendations
          *
          * @param {string} message The message to search for recommendations
-         * @param {string} onSuccess The function to call on success
-         * @param {string} onFail The function to call on fail
+         * @param {string} site The site to search for
+         * @param {function} onSuccess The function to call on success
+         * @param {function} onFail The function to call on fail
          */
         recommendations: function(message, site, onSuccess, onFail) {
             var formattedMessage = _formatMessage(message);
@@ -45,7 +50,6 @@ primalAPI = rest.service(
                 }
                 onSuccess(cards);
             }).on("fail", function(data, response) {
-                // TODO more efficient way of handling success, fail, error, and maybe timeout
                 onFail(response.rawEncoded);
             }).on("error", function(data, response) {
                 onFail(response.rawEncoded);

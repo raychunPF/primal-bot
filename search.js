@@ -8,26 +8,33 @@ var PrimalAPI = require('./primalAPI.js').primalAPI;
 // =========================================================
 var CONFIG = global.config;
 
+/**
+ * This service gets recommendations from certain sites using a query
+ * and creates an array of recommended content
+ *
+ * @param {string} query The query to search for recommendations
+ * @param {function} onSuccess The function to call on success
+ * @param {function} onFail The function to call on fail
+ */
 exports.querySitesForRecipes = function(message, onSuccess, onFail) {
     var contentList = [];
-    var count = 0;
+    var numberOfProcessed = 0;
     var siteList = CONFIG.FULL_SITE_LIST;
     
-    for(var i = 0; i < siteList.length; i++) {
-        count++;
-        PrimalAPI.recommendations(message, siteList[i], function(content) {
-            for(var j = 0; j < content.length; j++) {
-                contentList.push(content[j]);
+    siteList.forEach(function(item, index, array) {
+        PrimalAPI.recommendations(message, item, function(recommendedContent) {
+            for(var j = 0; j < recommendedContent.length; j++) {
+                contentList.push(recommendedContent[j]);
             }
-            count --;
+            numberOfProcessed++;
             
-            if(count == 0) {
+            if(numberOfProcessed === siteList.length) {
                 contentList.sort(function(a, b) {
                     return b.contentScore - a.contentScore;
                 });
                 contentList = contentList.slice(0,4);
                 onSuccess(contentList);
             }
-        },  function(error){ console.log(error); });
-    }
+        },  function(error) { onFail(error); });
+    });
 }

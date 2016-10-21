@@ -102,8 +102,14 @@ bot.dialog('/recommendation', [
             }
         }
         
-        if (!args.response || args.response === "") {
+        if ((!args.response || args.response === "") && !args.error) {
             builder.Prompts.text(session, "Hey " + session.userData.name + ", give me the name of a dish and I'll find some recipes.");
+        } else if (args.error) {
+            if (args.error === "noContent") {
+                builder.Prompts.text(session, "There were no results for " + args.response + "... Try searching for a different dish");
+            } else {
+                builder.Prompts.text(session, "There seems to be an error... Try searching for a different dish");
+            }
         } else {
             next({response: args.response});
         }
@@ -113,9 +119,14 @@ bot.dialog('/recommendation', [
         session.dialogData.dish = results.response;
         // Indicate to user that bot is typing
         session.sendTyping();
-        search.querySitesForRecipes(session.dialogData.dish, function(content){
+        search.querySitesForRecipes(session.dialogData.dish, function(content) {
+            if (content.length === 0) {
+                session.replaceDialog("/recommendation", { response: session.dialogData.dish, error: "noContent" });
+            }
             session.beginDialog("/carousel", { cards: content });
-        }, function(){});
+        }, function(error){
+            session.replaceDialog("/recommendation", { response: "", error: error.status });
+        });
     },
     function(session) {
         builder.Prompts.text(session, "Alright " + session.userData.name + ", here are a couple " + session.dialogData.dish + " recipes. Give me another dish or say quit if you want to stop.");
@@ -154,7 +165,7 @@ bot.dialog('/carousel', [
                     .attachments(prettyCards);
                 
                 session.endDialog(msg);
-            }, function() {console.log("err"); });
+            }, function(errorMessage) { console.log(errorMessage); });
         }
     }
 ]);
