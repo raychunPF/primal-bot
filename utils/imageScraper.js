@@ -22,21 +22,26 @@ exports.getPreviewImage = function(url, onSuccess, onFail) {
   });
 }
 
-exports.addPreviewImages = function(content, onSuccess, onFail) {
-    var i = 0;
-  
-    function recurse() {
-        if(i < content.length){
-            var item = content[i];
-            if(!item["image"]){
-                exports.getPreviewImage(item["url"], function(imageUrl) {
-                    content[i]["image"] = imageUrl;
-                    i += 1;
-                    recurse();
-                }, function(message) { console.log(message); onFail(); });
+exports.addPreviewImages = function(recommendedContent, onSuccess, onFail) {
+    var numberOfProcessed = 0;
+    var contentWithImages = [];
+    
+    recommendedContent.forEach(function(item, index, array) {
+        if(!item["image"]) {
+            exports.getPreviewImage(item["url"], function(imageUrl) {
+                numberOfProcessed++
+                item["image"] = imageUrl;
+                contentWithImages.push(item);  
+                if(numberOfProcessed === recommendedContent.length) {
+                    onSuccess(contentWithImages);
+                }
+            }, function(errorMessage) { console.log(errorMessage); onFail(); });
+        } else {
+            numberOfProcessed++;
+            contentWithImages.push(item);
+            if(numberOfProcessed === recommendedContent.length) {
+                onSuccess(contentWithImages);
             }
         }
-        else { onSuccess(content); }
-    }
-    recurse();
+    })
 }
