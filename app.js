@@ -7,6 +7,7 @@ var restify = require('restify');
 var builder = require('botbuilder');
 var search = require('./search.js');
 var scraper = require('./utils/imageScraper.js');
+var utils = require('./utils/general.js')
 
 // =========================================================
 // Static Variables
@@ -129,7 +130,12 @@ bot.dialog('/recommendation', [
         });
     },
     function(session) {
-        builder.Prompts.text(session, "Alright " + session.userData.name + ", here are a couple " + session.dialogData.dish + " recipes. Give me another dish or say quit if you want to stop.");
+        if (utils.isUrl(session.dialogData.dish)) {
+            builder.Prompts.text(session, "Alright " + session.userData.name + ", here are some recipes similar to that! Give me another dish or say quit if you want to stop.");
+        }
+        else{
+            builder.Prompts.text(session, "Hey " + session.userData.name + ", here are a couple " + session.dialogData.dish + " recipes. Give me another dish or say quit if you want to stop.");
+        }
     },
     function(session, results) {
         // Loop recommendations
