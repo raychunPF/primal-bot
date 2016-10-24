@@ -151,6 +151,7 @@ bot.dialog('/carousel', [
                 var prettyCards = [];
                 for (var i = 0; i < content.length; i++) {
                     var item = content[i];
+                    var contentURL = decodeURIComponent(item["url"].substr(item["url"].indexOf('r=')+2));
                     prettyCards.push(
                         new builder.HeroCard(session)
                             .title(item["title"])
@@ -158,6 +159,9 @@ bot.dialog('/carousel', [
                             .text(item["description"])
                             .images([ builder.CardImage.create(session, item["image"]) ])
                             .tap(builder.CardAction.openUrl(session, decodeURI(item["url"]), item["publisher"]))
+                            .buttons([
+                                builder.CardAction.imBack(session, contentURL, "More like this...")
+                            ])
                     );
                 }
                 var msg = new builder.Message(session)
