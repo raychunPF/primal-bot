@@ -23,7 +23,7 @@ exports.getPreviewImage = function(url, onSuccess, onFail) {
 exports.addPreviewImages = function(recommendedContent, onSuccess, onFail) {
     var numberOfProcessed = 0;
     
-    recommendedContent.forEach(function(item, index, array) {
+    recommendedContent.forEach(function(item) {
         if(!item["image"]) {
             exports.getPreviewImage(item["url"], function(imageUrl) {
                 numberOfProcessed++

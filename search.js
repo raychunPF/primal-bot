@@ -21,18 +21,21 @@ exports.querySitesForRecipes = function(message, onSuccess, onFail) {
     var numberOfProcessed = 0;
     var siteList = CONFIG.FULL_SITE_LIST;
     
-    siteList.forEach(function(item, index, array) {
+    // We start all of our callbacks at the same time
+    siteList.forEach(function(item) {
         PrimalAPI.recommendations(message, item, function(recommendedContent) {
             for(var j = 0; j < recommendedContent.length; j++) {
                 contentList.push(recommendedContent[j]);
             }
             numberOfProcessed++;
             
+            // We start our onSuccess when we are done all of the callbacks
             if(numberOfProcessed === siteList.length) {
+                // We sort our list from highest content score to lowest and take the top 4 results
                 contentList.sort(function(a, b) {
                     return b.contentScore - a.contentScore;
                 });
-                contentList = contentList.slice(0,4);
+                contentList = contentList.slice(0,CONFIG.DISPLAY.maxContentItems);
                 onSuccess(contentList);
             }
         },  function(error) { onFail(error); });

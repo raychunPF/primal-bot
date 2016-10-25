@@ -15,6 +15,10 @@
         }
     },
     
+    "DISPLAY": {
+        "maxContentItems": 4
+    },
+    
     "TEST_SITE_LIST": [
         "allrecipes.com"
     ],
