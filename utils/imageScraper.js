@@ -1,8 +1,9 @@
 // =========================================================
 // Imports
 // =========================================================
-var cheerio = require('cheerio')
-var request = require('request')
+var cheerio = require('cheerio');
+var request = require('request');
+var Async = require('async');
 
 exports.getPreviewImage = function(url, onSuccess, onFail) {
     request(url, function (error, response, html) {
@@ -21,22 +22,12 @@ exports.getPreviewImage = function(url, onSuccess, onFail) {
 }
 
 exports.addPreviewImages = function(recommendedContent, onSuccess, onFail) {
-    var numberOfProcessed = 0;
-    
-    recommendedContent.forEach(function(item) {
+    Async.concat(recommendedContent, function(item, callback) {
         if(!item["image"]) {
             exports.getPreviewImage(item["url"], function(imageUrl) {
-                numberOfProcessed++
                 item["image"] = imageUrl;
-                if(numberOfProcessed === recommendedContent.length) {
-                    onSuccess(recommendedContent);
-                }
+                callback(null, [item]);
             }, function(errorMessage) { onFail(errorMessage); });
-        } else {
-            numberOfProcessed++;
-            if(numberOfProcessed === recommendedContent.length) {
-                onSuccess(recommendedContent);
-            }
         }
-    });
+    }, function(error, recommendedContent) { onSuccess(recommendedContent); });
 }
