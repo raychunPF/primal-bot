@@ -2,6 +2,7 @@
 // Imports
 // =========================================================
 var PrimalAPI = require('./primalAPI.js').primalAPI;
+var Async = require('async');
 
 // =========================================================
 // Static Variables
@@ -17,27 +18,9 @@ var CONFIG = global.config;
  * @param {function} onFail The function to call on fail
  */
 exports.querySitesForRecipes = function(message, onSuccess, onFail) {
-    var contentList = [];
-    var numberOfProcessed = 0;
-    var siteList = CONFIG.FULL_SITE_LIST;
-    
-    // We start all of our callbacks at the same time
-    siteList.forEach(function(item) {
-        PrimalAPI.recommendations(message, item, function(recommendedContent) {
-            for(var j = 0; j < recommendedContent.length; j++) {
-                contentList.push(recommendedContent[j]);
-            }
-            numberOfProcessed++;
-            
-            // We start our onSuccess when we are done all of the callbacks
-            if(numberOfProcessed === siteList.length) {
-                // We sort our list from highest content score to lowest and take the top 4 results
-                contentList.sort(function(a, b) {
-                    return b.contentScore - a.contentScore;
-                });
-                contentList = contentList.slice(0,CONFIG.DISPLAY.maxContentItems);
-                onSuccess(contentList);
-            }
-        },  function(error) { onFail(error); });
-    });
+    Async.concat(CONFIG.FULL_SITE_LIST, function(item, callback) {
+        PrimalAPI.recommendations(message, item, function(content) {
+            callback(null, content);
+        }, function(error) { onFail(error); });
+    }, function(error, recommendedContent) { onSuccess(recommendedContent); });
 }
