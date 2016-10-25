@@ -29,5 +29,6 @@ exports.addPreviewImages = function(recommendedContent, onSuccess, onFail) {
                 callback(null, [item]);
             }, function(errorMessage) { onFail(errorMessage); });
         }
+        else { callback(null, item); }
     }, function(error, recommendedContent) { onSuccess(recommendedContent); });
 }
